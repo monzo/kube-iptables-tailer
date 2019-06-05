@@ -37,6 +37,9 @@ const (
 
 	WatchLogsIntervalSeconds       = "WATCH_LOGS_INTERVAL_SECONDS"
 	DefaultWatchLogsIntervalSecond = 5
+
+	PodIdentifer         = "POD_IDENTIFIER"
+	DefaultPodIdentifier = "namespace"
 )
 
 func GetRequiredEnvString(key string) string {
