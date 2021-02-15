@@ -35,7 +35,7 @@ func TestParsingDropLog(t *testing.T) {
 	channel := make(chan PacketDrop, 100)
 	// need to use curTime because parse() will not insert expired packetDrop
 	curTime := time.Now().Format(PacketDropLogTimeLayout)
-	testLog := fmt.Sprintf("%s %s %s SRC=%s DST=%s", curTime, testHostname, testLogPrefix, testSrcIP, testDstIP)
+	testLog := fmt.Sprintf("%s %s %s SRC=%s DST=%s PROTO=TCP SYN", curTime, testHostname, testLogPrefix, testSrcIP, testDstIP)
 	expected := PacketDrop{
 		LogTime:  curTime,
 		HostName: testHostname,
@@ -93,6 +93,18 @@ func TestParsingNonePacketDropLog(t *testing.T) {
 
 	if err != nil {
 		t.Fatalf("Expected error nil, but got error %s", err)
+	}
+}
+
+// Test if packet parser works for none packet drop log (should just ignore and not return error)
+func TestParsingTCPPacketWithoutSYN(t *testing.T) {
+	channel := make(chan PacketDrop)
+	testLog := fmt.Sprintf("%s %s %s SRC=%s DST=%s PROTO=TCP ACK",
+		time.Now().Format(PacketDropLogTimeLayout), testHostname, testLogPrefix, testSrcIP, testDstIP)
+	err := parse(testLogPrefix, testLog, channel)
+
+	if err == nil {
+		t.Fatalf("Expected error, but got error nil!")
 	}
 }
 
