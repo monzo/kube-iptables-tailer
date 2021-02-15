@@ -10,11 +10,11 @@ import (
 	"time"
 )
 
-const fieldSrcIP  = "SRC"
-const fieldDstIP  = "DST"
-const fieldProto  = "PROTO"
+const fieldSrcIP = "SRC"
+const fieldDstIP = "DST"
+const fieldProto = "PROTO"
 const fieldTCPSYN = "SYN"
-const protoTCP    = "TCP"
+const protoTCP = "TCP"
 const PacketDropLogTimeLayout = "2006-01-02T15:04:05.000000-07:00"
 
 // PacketDrop is the result object parsed from single raw log containing information about an iptables packet drop.
@@ -112,12 +112,11 @@ func getPacketDrop(packetDropLog string) (PacketDrop, error) {
 	// conntrack. Rules will be applied at a lower precedence which in turn means if we encounter any drops without a
 	// SYN it's because of a broken connection and not a disallowed flow.
 	if protocol, err := getFieldValue(logFields, fieldProto); err == nil && protocol == protoTCP {
-		if _, err = getFieldValue(logFields, fieldTCPSYN); err != nil {
+		if !hasField(logFields, fieldTCPSYN) {
 			// No SYN flag.
 			return PacketDrop{}, errors.New("Ignoring TCP packet without a SYN flag")
 		}
 	}
-
 
 	return PacketDrop{
 			LogTime:  logTime,
@@ -150,4 +149,13 @@ func getFieldValue(logFields []string, fieldName string) (string, error) {
 		}
 	}
 	return "", errors.New(fmt.Sprintf("Missing field=%+v", fieldName))
+}
+
+func hasField(logFields []string, fieldName string) bool {
+	for _, field := range logFields {
+		if field == fieldName || strings.HasPrefix(field, fmt.Sprintf("%s=", fieldName)) {
+			return true
+		}
+	}
+	return false
 }
