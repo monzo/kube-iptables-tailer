@@ -10,8 +10,11 @@ import (
 	"time"
 )
 
-const fieldSrcIP = "SRC"
-const fieldDstIP = "DST"
+const fieldSrcIP  = "SRC"
+const fieldDstIP  = "DST"
+const fieldProto  = "PROTO"
+const fieldTCPSYN = "SYN"
+const protoTCP    = "TCP"
 const PacketDropLogTimeLayout = "2006-01-02T15:04:05.000000-07:00"
 
 // PacketDrop is the result object parsed from single raw log containing information about an iptables packet drop.
@@ -103,6 +106,18 @@ func getPacketDrop(packetDropLog string) (PacketDrop, error) {
 	if err != nil {
 		return PacketDrop{}, err
 	}
+
+	// Ignore TCP packet drops that do not include a SYN flag.
+	// Generally IPTables rules for TCP will use conntrack to allow all traffic after the initial 3-way handshake using
+	// conntrack. Rules will be applied at a lower precedence which in turn means if we encounter any drops without a
+	// SYN it's because of a broken connection and not a disallowed flow.
+	if protocol, err := getFieldValue(logFields, fieldProto); err == nil && protocol == protoTCP {
+		if _, err = getFieldValue(logFields, fieldTCPSYN); err != nil {
+			// No SYN flag.
+			return PacketDrop{}, errors.New("Ignoring TCP packet without a SYN flag")
+		}
+	}
+
 
 	return PacketDrop{
 			LogTime:  logTime,
