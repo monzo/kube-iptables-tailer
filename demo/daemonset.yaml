@@ -1,28 +1,36 @@
 ---
-  apiVersion: "extensions/v1beta1"
-  kind: "DaemonSet"
+  apiVersion: "apps/v1"
+  kind: DaemonSet
   metadata: 
-    name: "kube-iptables-tailer"
+    name: kube-iptables-tailer
     namespace: "kube-system"
   spec: 
+    selector:
+      matchLabels:
+        app: kube-iptables-tailer
     template:
       metadata:
         labels:
-          app: "kube-iptables-tailer"
+          app: kube-iptables-tailer
       spec: 
+        serviceAccountName: kube-iptables-tailer
         containers: 
-          - name: "kube-iptables-tailer"
+          - name: kube-iptables-tailer
             command:
               - "/kube-iptables-tailer"
               - "--log_dir=/my-service-logs" # change the output directory of service logs
               - "--v=4" # enable V-leveled logging at this level
-            env: 
+            env:
               - name: "IPTABLES_LOG_PATH"
                 value: "/var/log/iptables.log"
+              # For newer, journald systems based on Debian,
+              # instead of IPTABLES_LOG_PATH, use: 
+#             - name: JOURNAL_DIRECTORY
+#               value: "/var/log/journal"
               - name: "IPTABLES_LOG_PREFIX"
                 # log prefix defined in your iptables chains
                 value: "calico-drop:"
-            image: "boxinc/kube-iptables-tailer:v0.1.0"
+            image: "boxinc/kube-iptables-tailer:v0.1.0" 
             volumeMounts: 
               - name: "iptables-logs"
                 mountPath: "/var/log"

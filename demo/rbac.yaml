@@ -1,0 +1,28 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kube-iptables-tailer
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods", "services", "endpoints"]
+  verbs: ["get", "watch", "list"]
+- apiGroups: ["apps"]
+  resources: ["daemonsets", "statefulsets", "replicasets", "deployments"]
+  verbs: ["get", "watch", "list"]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["get", "watch", "list", "create", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kube-iptables-tailer 
+subjects:
+- kind: ServiceAccount
+  name: kube-iptables-tailer 
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole 
+  name: kube-iptables-tailer 
